@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../contexts/AppContext';
 import { COLORS } from '../utils/constants';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function AuthScreen() {
   const { login, register } = useApp();
@@ -28,6 +29,7 @@ export default function AuthScreen() {
     bio: '',
     location: '',
   });
+  const { colors } = useTheme();
 
   const handleSubmit = async () => {
     setLoading(true);

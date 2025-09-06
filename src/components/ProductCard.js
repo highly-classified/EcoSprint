@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../contexts/AppContext';
-import { COLORS } from '../utils/constants';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatDate } from '../utils/formatPrice';
 
 const { width } = Dimensions.get('window');
@@ -17,6 +17,7 @@ const cardWidth = (width - 48) / 2;
 
 export default function ProductCard({ product, onPress, showActions = true }) {
   const { addToCart, currentUser } = useApp();
+  const { colors } = useTheme();
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -27,70 +28,80 @@ export default function ProductCard({ product, onPress, showActions = true }) {
   const getConditionColor = (condition) => {
     switch (condition) {
       case 'Like New':
-        return COLORS.success;
+        return colors.success;
       case 'Good':
-        return COLORS.info;
+        return colors.info;
       case 'Fair':
-        return COLORS.warning;
+        return colors.warning;
       default:
-        return COLORS.gray500;
+        return colors.textTertiary;
     }
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={[styles.container, { 
+      backgroundColor: colors.surface,
+      shadowColor: colors.cardShadow,
+    }]} onPress={onPress}>
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: product.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop' }}
           style={styles.image}
         />
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart-outline" size={16} color={COLORS.gray600} />
+        <TouchableOpacity style={[styles.favoriteButton, { backgroundColor: colors.overlay }]}>
+          <Ionicons name="heart-outline" size={16} color={colors.textSecondary} />
         </TouchableOpacity>
-        <View style={styles.conditionBadge}>
+        <View style={[styles.conditionBadge, { backgroundColor: colors.surface }]}>
           <Text style={[styles.conditionText, { color: getConditionColor(product.condition) }]}>
             {product.condition}
           </Text>
         </View>
-        <View style={styles.ecoBadge}>
-          <Ionicons name="leaf" size={12} color={COLORS.success} />
-          <Text style={styles.ecoText}>Eco-Friendly</Text>
+        <View style={[styles.ecoBadge, { backgroundColor: colors.overlay }]}>
+          <Ionicons name="leaf" size={12} color={colors.success} />
+          <Text style={[styles.ecoText, { color: colors.success }]}>Eco-Friendly</Text>
         </View>
       </View>
       
       <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
             {product.title}
           </Text>
-          <Text style={styles.price}>${product.price}</Text>
+          <Text style={[styles.price, { color: colors.primary }]}>${product.price}</Text>
         </View>
         
-        <Text style={styles.description} numberOfLines={2}>
+        <Text style={[styles.description, { color: colors.textSecondary }]} numberOfLines={2}>
           {product.description}
         </Text>
         
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={12} color={COLORS.gray500} />
-            <Text style={styles.metaText}>{product.location || product.sellerName}</Text>
+            <Ionicons name="location-outline" size={12} color={colors.textTertiary} />
+            <Text style={[styles.metaText, { color: colors.textTertiary }]}>
+              {product.location || product.sellerName}
+            </Text>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="calendar-outline" size={12} color={COLORS.gray500} />
-            <Text style={styles.metaText}>{formatDate(product.datePosted)}</Text>
+            <Ionicons name="calendar-outline" size={12} color={colors.textTertiary} />
+            <Text style={[styles.metaText, { color: colors.textTertiary }]}>
+              {formatDate(product.datePosted)}
+            </Text>
           </View>
         </View>
 
         {showActions && !isOwnProduct && (
-          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-            <Ionicons name="cart-outline" size={16} color={COLORS.white} />
-            <Text style={styles.addToCartText}>Add to Cart</Text>
+          <TouchableOpacity 
+            style={[styles.addToCartButton, { backgroundColor: colors.primary }]} 
+            onPress={handleAddToCart}
+          >
+            <Ionicons name="cart-outline" size={16} color={colors.white} />
+            <Text style={[styles.addToCartText, { color: colors.white }]}>Add to Cart</Text>
           </TouchableOpacity>
         )}
 
         {isOwnProduct && (
-          <View style={styles.ownProductButton}>
-            <Text style={styles.ownProductText}>Your Listing</Text>
+          <View style={[styles.ownProductButton, { backgroundColor: colors.gray100 }]}>
+            <Text style={[styles.ownProductText, { color: colors.textSecondary }]}>Your Listing</Text>
           </View>
         )}
       </View>
@@ -101,10 +112,8 @@ export default function ProductCard({ product, onPress, showActions = true }) {
 const styles = StyleSheet.create({
   container: {
     width: cardWidth,
-    backgroundColor: COLORS.white,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -128,7 +137,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 20,
     padding: 8,
   },
@@ -136,7 +144,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -149,7 +156,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     left: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -159,7 +165,6 @@ const styles = StyleSheet.create({
   ecoText: {
     fontSize: 10,
     fontWeight: '600',
-    color: COLORS.success,
     marginLeft: 4,
   },
   content: {
@@ -175,17 +180,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginRight: 8,
   },
   price: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primary,
   },
   description: {
     fontSize: 12,
-    color: COLORS.gray600,
     marginBottom: 12,
     lineHeight: 16,
   },
@@ -201,11 +203,9 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 10,
-    color: COLORS.gray500,
     marginLeft: 4,
   },
   addToCartButton: {
-    backgroundColor: COLORS.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -213,19 +213,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   addToCartText: {
-    color: COLORS.white,
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 6,
   },
   ownProductButton: {
-    backgroundColor: COLORS.gray100,
     alignItems: 'center',
     paddingVertical: 10,
     borderRadius: 12,
   },
   ownProductText: {
-    color: COLORS.gray600,
     fontSize: 12,
     fontWeight: '600',
   },

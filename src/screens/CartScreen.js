@@ -11,10 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../contexts/AppContext';
-import { COLORS } from '../utils/constants';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CartScreen() {
   const { cartItems, removeFromCart, completePurchase } = useApp();
+  const { colors } = useTheme(); // Added theme support
 
   const totalAmount = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -38,48 +39,84 @@ export default function CartScreen() {
     );
   };
 
+  const getConditionColor = (condition) => {
+    switch (condition) {
+      case 'Like New':
+        return colors.success + '20';
+      case 'Good':
+        return colors.info + '20';
+      case 'Fair':
+        return colors.warning + '20';
+      default:
+        return colors.gray200;
+    }
+  };
+
   const renderHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.headerTitle}>Shopping Cart</Text>
+    <View style={[styles.header, { backgroundColor: colors.primary }]}>
+      <Text style={[styles.headerTitle, { color: colors.white }]}>
+        Shopping Cart
+      </Text>
       <View style={styles.headerStats}>
-        <Text style={styles.headerStat}>{totalItems} {totalItems === 1 ? 'item' : 'items'}</Text>
+        <Text style={[styles.headerStat, { color: colors.white }]}>
+          {totalItems} {totalItems === 1 ? 'item' : 'items'}
+        </Text>
         <View style={styles.headerStatItem}>
-          <Ionicons name="leaf" size={16} color={COLORS.white} />
-          <Text style={styles.headerStat}>Sustainable choices</Text>
+          <Ionicons name="leaf" size={16} color={colors.white} />
+          <Text style={[styles.headerStat, { color: colors.white }]}>
+            Sustainable choices
+          </Text>
         </View>
       </View>
     </View>
   );
 
   const renderCartItem = ({ item }) => (
-    <View style={styles.cartItem}>
+    <View style={[styles.cartItem, { 
+      backgroundColor: colors.surface,
+      shadowColor: colors.cardShadow 
+    }]}>
       <Image
         source={{ uri: item.product.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop' }}
-        style={styles.itemImage}
+        style={[styles.itemImage, { backgroundColor: colors.gray100 }]}
       />
       
       <View style={styles.itemContent}>
-        <Text style={styles.itemTitle} numberOfLines={2}>{item.product.title}</Text>
+        <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={2}>
+          {item.product.title}
+        </Text>
         <View style={styles.itemMeta}>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{item.product.category}</Text>
+          <View style={[styles.categoryBadge, { backgroundColor: colors.gray100 }]}>
+            <Text style={[styles.categoryText, { color: colors.textSecondary }]}>
+              {item.product.category}
+            </Text>
           </View>
-          <View style={[styles.conditionBadge, { backgroundColor: getConditionColor(item.product.condition) }]}>
-            <Text style={styles.conditionText}>{item.product.condition}</Text>
+          <View style={[styles.conditionBadge, { 
+            backgroundColor: getConditionColor(item.product.condition) 
+          }]}>
+            <Text style={[styles.conditionText, { color: colors.text }]}>
+              {item.product.condition}
+            </Text>
           </View>
         </View>
-        <Text style={styles.itemPrice}>${item.product.price}</Text>
+        <Text style={[styles.itemPrice, { color: colors.primary }]}>
+          ${item.product.price}
+        </Text>
       </View>
 
       <View style={styles.itemActions}>
         <View style={styles.quantityContainer}>
-          <Text style={styles.quantityLabel}>Qty:</Text>
-          <View style={styles.quantityBadge}>
-            <Text style={styles.quantityText}>{item.quantity}</Text>
+          <Text style={[styles.quantityLabel, { color: colors.textSecondary }]}>
+            Qty:
+          </Text>
+          <View style={[styles.quantityBadge, { backgroundColor: colors.gray100 }]}>
+            <Text style={[styles.quantityText, { color: colors.text }]}>
+              {item.quantity}
+            </Text>
           </View>
         </View>
         
-        <Text style={styles.itemTotal}>
+        <Text style={[styles.itemTotal, { color: colors.text }]}>
           ${(item.product.price * item.quantity).toFixed(2)}
         </Text>
         
@@ -87,60 +124,75 @@ export default function CartScreen() {
           style={styles.removeButton}
           onPress={() => removeFromCart(item.product.id)}
         >
-          <Ionicons name="trash-outline" size={20} color={COLORS.error} />
+          <Ionicons name="trash-outline" size={20} color={colors.error} />
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const getConditionColor = (condition) => {
-    switch (condition) {
-      case 'Like New':
-        return COLORS.success + '20';
-      case 'Good':
-        return COLORS.info + '20';
-      case 'Fair':
-        return COLORS.warning + '20';
-      default:
-        return COLORS.gray200;
-    }
-  };
-
   const renderSummary = () => (
     <View style={styles.summaryContainer}>
-      <View style={styles.impactSection}>
+      <View style={[styles.impactSection, { 
+        backgroundColor: colors.success + '10',
+        borderColor: colors.success + '30' 
+      }]}>
         <View style={styles.impactHeader}>
-          <Ionicons name="leaf" size={20} color={COLORS.success} />
-          <Text style={styles.impactTitle}>Your Environmental Impact</Text>
+          <Ionicons name="leaf" size={20} color={colors.success} />
+          <Text style={[styles.impactTitle, { color: colors.success }]}>
+            Your Environmental Impact
+          </Text>
         </View>
         <View style={styles.impactGrid}>
           <View style={styles.impactItem}>
-            <Text style={styles.impactValue}>✅ {totalItems} items saved from waste</Text>
+            <Text style={[styles.impactValue, { color: colors.success }]}>
+              ✅ {totalItems} items saved from waste
+            </Text>
           </View>
           <View style={styles.impactItem}>
-            <Text style={styles.impactValue}>✅ Reduced carbon footprint</Text>
+            <Text style={[styles.impactValue, { color: colors.success }]}>
+              ✅ Reduced carbon footprint
+            </Text>
           </View>
           <View style={styles.impactItem}>
-            <Text style={styles.impactValue}>✅ Supporting circular economy</Text>
+            <Text style={[styles.impactValue, { color: colors.success }]}>
+              ✅ Supporting circular economy
+            </Text>
           </View>
           <View style={styles.impactItem}>
-            <Text style={styles.impactValue}>✅ Promoting sustainability</Text>
+            <Text style={[styles.impactValue, { color: colors.success }]}>
+              ✅ Promoting sustainability
+            </Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.totalSection}>
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalAmount}>${totalAmount.toFixed(2)}</Text>
+      <View style={[styles.totalSection, { 
+        backgroundColor: colors.surface,
+        shadowColor: colors.cardShadow 
+      }]}>
+        <View style={[styles.totalRow, { borderTopColor: colors.border }]}>
+          <Text style={[styles.totalLabel, { color: colors.text }]}>
+            Total:
+          </Text>
+          <Text style={[styles.totalAmount, { color: colors.primary }]}>
+            ${totalAmount.toFixed(2)}
+          </Text>
         </View>
         
-        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-          <Ionicons name="card-outline" size={20} color={COLORS.white} />
-          <Text style={styles.checkoutButtonText}>Complete Sustainable Purchase</Text>
+        <TouchableOpacity 
+          style={[styles.checkoutButton, { 
+            backgroundColor: colors.primary,
+            shadowColor: colors.cardShadow 
+          }]} 
+          onPress={handleCheckout}
+        >
+          <Ionicons name="card-outline" size={20} color={colors.white} />
+          <Text style={[styles.checkoutButtonText, { color: colors.white }]}>
+            Complete Sustainable Purchase
+          </Text>
         </TouchableOpacity>
         
-        <Text style={styles.demoNote}>
+        <Text style={[styles.demoNote, { color: colors.textTertiary }]}>
           🌱 This is a demo - no actual payment will be processed
         </Text>
       </View>
@@ -149,22 +201,29 @@ export default function CartScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="cart-outline" size={60} color={COLORS.gray400} />
-      <Text style={styles.emptyTitle}>Your cart is empty</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="cart-outline" size={60} color={colors.textTertiary} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        Your cart is empty
+      </Text>
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         Discover sustainable products and add them to your cart
       </Text>
-      <View style={styles.emptyImpact}>
+      <View style={[styles.emptyImpact, { 
+        backgroundColor: colors.success + '10',
+        borderColor: colors.success + '30' 
+      }]}>
         <View style={styles.emptyImpactHeader}>
-          <Ionicons name="leaf" size={20} color={COLORS.success} />
-          <Text style={styles.emptyImpactText}>Every purchase makes a difference for our planet</Text>
+          <Ionicons name="leaf" size={20} color={colors.success} />
+          <Text style={[styles.emptyImpactText, { color: colors.success }]}>
+            Every purchase makes a difference for our planet
+          </Text>
         </View>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {cartItems.length === 0 ? (
         renderEmpty()
       ) : (
@@ -184,13 +243,11 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   listContent: {
     flexGrow: 1,
   },
   header: {
-    backgroundColor: COLORS.primary,
     margin: 16,
     borderRadius: 16,
     padding: 24,
@@ -198,7 +255,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.white,
     marginBottom: 8,
   },
   headerStats: {
@@ -208,7 +264,7 @@ const styles = StyleSheet.create({
   },
   headerStat: {
     fontSize: 14,
-    color: COLORS.gray100,
+    opacity: 0.9,
   },
   headerStatItem: {
     flexDirection: 'row',
@@ -216,14 +272,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cartItem: {
-    backgroundColor: COLORS.white,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
@@ -236,7 +290,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 12,
-    backgroundColor: COLORS.gray100,
   },
   itemContent: {
     flex: 1,
@@ -245,7 +298,6 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginBottom: 8,
   },
   itemMeta: {
@@ -255,14 +307,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryBadge: {
-    backgroundColor: COLORS.gray100,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   categoryText: {
     fontSize: 10,
-    color: COLORS.gray600,
   },
   conditionBadge: {
     paddingHorizontal: 8,
@@ -272,12 +322,10 @@ const styles = StyleSheet.create({
   conditionText: {
     fontSize: 10,
     fontWeight: '600',
-    color: COLORS.gray700,
   },
   itemPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primary,
   },
   itemActions: {
     alignItems: 'flex-end',
@@ -290,10 +338,8 @@ const styles = StyleSheet.create({
   },
   quantityLabel: {
     fontSize: 12,
-    color: COLORS.gray600,
   },
   quantityBadge: {
-    backgroundColor: COLORS.gray100,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -301,12 +347,10 @@ const styles = StyleSheet.create({
   quantityText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.gray900,
   },
   itemTotal: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.gray900,
   },
   removeButton: {
     padding: 8,
@@ -317,11 +361,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   impactSection: {
-    backgroundColor: COLORS.success + '10',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: COLORS.success + '30',
   },
   impactHeader: {
     flexDirection: 'row',
@@ -331,7 +373,6 @@ const styles = StyleSheet.create({
   impactTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.success,
     marginLeft: 8,
   },
   impactGrid: {
@@ -343,13 +384,10 @@ const styles = StyleSheet.create({
   },
   impactValue: {
     fontSize: 14,
-    color: COLORS.success,
   },
   totalSection: {
-    backgroundColor: COLORS.white,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -364,28 +402,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray200,
     marginBottom: 20,
   },
   totalLabel: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.gray900,
   },
   totalAmount: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.primary,
   },
   checkoutButton: {
-    backgroundColor: COLORS.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
     marginBottom: 8,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -395,14 +428,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   checkoutButtonText: {
-    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
   demoNote: {
     fontSize: 12,
-    color: COLORS.gray500,
     textAlign: 'center',
   },
   emptyContainer: {
@@ -414,23 +445,19 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginTop: 20,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: COLORS.gray600,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 30,
   },
   emptyImpact: {
-    backgroundColor: COLORS.success + '10',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.success + '30',
   },
   emptyImpactHeader: {
     flexDirection: 'row',
@@ -439,7 +466,6 @@ const styles = StyleSheet.create({
   emptyImpactText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.success,
     marginLeft: 8,
   },
 });

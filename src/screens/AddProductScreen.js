@@ -16,6 +16,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
 import { COLORS, CATEGORIES, CONDITIONS } from '../utils/constants';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function AddProductScreen() {
   const navigation = useNavigation();
@@ -29,6 +30,7 @@ export default function AddProductScreen() {
     condition: 'Good',
     location: '',
   });
+  const { colors } = useTheme();
 
   const handleSubmit = async () => {
     if (!currentUser) return;

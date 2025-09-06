@@ -11,12 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
+import { useTheme } from '../contexts/ThemeContext';
 import ProductCard from '../components/ProductCard';
-import { COLORS } from '../utils/constants';
 
 export default function MyListingsScreen() {
   const navigation = useNavigation();
   const { products, currentUser, deleteProduct } = useApp();
+  const { colors } = useTheme(); // Added theme support
   
   const myProducts = products.filter(product => 
     currentUser && product.sellerId === currentUser.id
@@ -40,26 +41,34 @@ export default function MyListingsScreen() {
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.primary }]}>
       <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>My Sustainable Listings</Text>
+        <Text style={[styles.headerTitle, { color: colors.white }]}>
+          My Sustainable Listings
+        </Text>
         <View style={styles.headerStats}>
           <View style={styles.statItem}>
-            <Ionicons name="list-outline" size={16} color={COLORS.white} />
-            <Text style={styles.statText}>{myProducts.length} items listed</Text>
+            <Ionicons name="list-outline" size={16} color={colors.white} />
+            <Text style={[styles.statText, { color: colors.white }]}>
+              {myProducts.length} items listed
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Ionicons name="trending-up-outline" size={16} color={COLORS.white} />
-            <Text style={styles.statText}>Total value: ${totalValue.toFixed(2)}</Text>
+            <Ionicons name="trending-up-outline" size={16} color={colors.white} />
+            <Text style={[styles.statText, { color: colors.white }]}>
+              Total value: ${totalValue.toFixed(2)}
+            </Text>
           </View>
         </View>
       </View>
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { backgroundColor: colors.white }]}
         onPress={() => navigation.navigate('AddProduct')}
       >
-        <Ionicons name="add" size={20} color={COLORS.primary} />
-        <Text style={styles.addButtonText}>Add Item</Text>
+        <Ionicons name="add" size={20} color={colors.primary} />
+        <Text style={[styles.addButtonText, { color: colors.primary }]}>
+          Add Item
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -73,16 +82,16 @@ export default function MyListingsScreen() {
       />
       <View style={styles.productActions}>
         <TouchableOpacity
-          style={styles.editButton}
+          style={[styles.editButton, { backgroundColor: colors.info }]}
           onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
         >
-          <Ionicons name="create-outline" size={16} color={COLORS.white} />
+          <Ionicons name="create-outline" size={16} color={colors.white} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.deleteButton}
+          style={[styles.deleteButton, { backgroundColor: colors.error }]}
           onPress={() => handleDelete(item.id)}
         >
-          <Ionicons name="trash-outline" size={16} color={COLORS.white} />
+          <Ionicons name="trash-outline" size={16} color={colors.white} />
         </TouchableOpacity>
       </View>
     </View>
@@ -90,22 +99,26 @@ export default function MyListingsScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="list-outline" size={60} color={COLORS.gray400} />
-      <Text style={styles.emptyTitle}>No listings yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Ionicons name="list-outline" size={60} color={colors.textTertiary} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No listings yet
+      </Text>
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         Start your sustainable selling journey by listing your first item
       </Text>
       <TouchableOpacity
-        style={styles.emptyButton}
+        style={[styles.emptyButton, { backgroundColor: colors.primary }]}
         onPress={() => navigation.navigate('AddProduct')}
       >
-        <Text style={styles.emptyButtonText}>List Your First Item</Text>
+        <Text style={[styles.emptyButtonText, { color: colors.white }]}>
+          List Your First Item
+        </Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={myProducts}
         renderItem={renderProduct}
@@ -123,7 +136,6 @@ export default function MyListingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   listContent: {
     flexGrow: 1,
@@ -133,7 +145,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   header: {
-    backgroundColor: COLORS.primary,
     margin: 16,
     borderRadius: 16,
     padding: 24,
@@ -147,7 +158,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.white,
     marginBottom: 12,
   },
   headerStats: {
@@ -159,11 +169,10 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 14,
-    color: COLORS.gray100,
     marginLeft: 6,
+    opacity: 0.9,
   },
   addButton: {
-    backgroundColor: COLORS.white,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -171,7 +180,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   addButtonText: {
-    color: COLORS.primary,
     fontWeight: '600',
     marginLeft: 6,
   },
@@ -187,12 +195,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editButton: {
-    backgroundColor: COLORS.info,
     borderRadius: 16,
     padding: 8,
   },
   deleteButton: {
-    backgroundColor: COLORS.error,
     borderRadius: 16,
     padding: 8,
   },
@@ -204,25 +210,21 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginTop: 20,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: COLORS.gray600,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 30,
   },
   emptyButton: {
-    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
   },
   emptyButtonText: {
-    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },

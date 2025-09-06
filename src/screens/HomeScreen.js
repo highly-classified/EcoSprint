@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,47 +12,90 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
+import { useTheme } from '../contexts/ThemeContext';
 import ProductCard from '../components/ProductCard';
-import { COLORS, CATEGORIES } from '../utils/constants';
+import { CATEGORIES } from '../utils/constants';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { products } = useApp();
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Improved filtering with useMemo for performance
+  const filteredProducts = useMemo(() => {
+    if (!products || products.length === 0) {
+      return [];
+    }
+
+    return products.filter(product => {
+      // Ensure product has required fields
+      if (!product.title || !product.description) {
+        return false;
+      }
+
+      // Search matching - case insensitive and trimmed
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch = query === '' || 
+        product.title.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query) ||
+        (product.brand && product.brand.toLowerCase().includes(query)) ||
+        (product.condition && product.condition.toLowerCase().includes(query));
+
+      // Category matching
+      const matchesCategory = !selectedCategory || 
+        selectedCategory === '' || 
+        product.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, selectedCategory]);
 
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   };
 
+  const handleSearchChange = (text) => {
+    setSearchQuery(text);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('');
+  };
+
+  const selectCategory = (category) => {
+    setSelectedCategory(category);
+    // Optionally close filters after selection
+    // setShowFilters(false);
+  };
+
   const renderHeader = () => (
     <View>
       {/* Hero Section */}
-      <View style={styles.heroSection}>
+      <View style={[styles.heroSection, { backgroundColor: colors.primary }]}>
         <View style={styles.heroContent}>
           <View style={styles.heroHeader}>
-            <Ionicons name="sparkles" size={24} color={COLORS.white} />
-            <Text style={styles.heroTitle}>Discover Sustainable Treasures</Text>
+            <Ionicons name="star" size={24} color={colors.white} />
+            <Text style={[styles.heroTitle, { color: colors.white }]}>
+              Discover Sustainable Treasures
+            </Text>
           </View>
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroSubtitle, { color: colors.white }]}>
             Find unique pre-loved items and give them a new life while reducing environmental impact.
           </Text>
           <TouchableOpacity
-            style={styles.heroButton}
+            style={[styles.heroButton, { backgroundColor: colors.white }]}
             onPress={() => navigation.navigate('AddProduct')}
           >
-            <Ionicons name="add" size={20} color={COLORS.primary} />
-            <Text style={styles.heroButtonText}>List Your Item</Text>
+            <Ionicons name="add" size={20} color={colors.primary} />
+            <Text style={[styles.heroButtonText, { color: colors.primary }]}>
+              List Your Item
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -60,43 +103,94 @@ export default function HomeScreen() {
       {/* Search and Filters */}
       <View style={styles.searchSection}>
         <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Ionicons name="search" size={20} color={COLORS.gray400} style={styles.searchIcon} />
+          <View style={[styles.searchInputContainer, { 
+            backgroundColor: colors.surface,
+            shadowColor: colors.cardShadow 
+          }]}>
+            <Ionicons name="search" size={20} color={colors.textTertiary} style={styles.searchIcon} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search for sustainable products..."
+              placeholderTextColor={colors.textTertiary}
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearchChange}
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              clearButtonMode="while-editing"
             />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => setSearchQuery('')}
+              >
+                <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
+              </TouchableOpacity>
+            )}
           </View>
           <TouchableOpacity
-            style={[styles.filterButton, showFilters && styles.filterButtonActive]}
+            style={[
+              styles.filterButton,
+              { 
+                backgroundColor: showFilters ? colors.primary : colors.surface,
+                borderColor: showFilters ? colors.primary : colors.border 
+              }
+            ]}
             onPress={() => setShowFilters(!showFilters)}
           >
-            <Ionicons name="filter" size={20} color={showFilters ? COLORS.white : COLORS.gray600} />
+            <Ionicons 
+              name="filter" 
+              size={20} 
+              color={showFilters ? colors.white : colors.textSecondary} 
+            />
           </TouchableOpacity>
         </View>
 
         {/* Category Filters */}
         {showFilters && (
-          <View style={styles.filtersContainer}>
-            <Text style={styles.filtersTitle}>Filter by Category</Text>
+          <View style={[styles.filtersContainer, { 
+            backgroundColor: colors.surface,
+            shadowColor: colors.cardShadow 
+          }]}>
+            <Text style={[styles.filtersTitle, { color: colors.textSecondary }]}>
+              Filter by Category
+            </Text>
             <View style={styles.categoriesContainer}>
               <TouchableOpacity
-                style={[styles.categoryButton, selectedCategory === '' && styles.categoryButtonActive]}
-                onPress={() => setSelectedCategory('')}
+                style={[
+                  styles.categoryButton,
+                  { 
+                    backgroundColor: selectedCategory === '' ? colors.primary : colors.gray100
+                  }
+                ]}
+                onPress={() => selectCategory('')}
               >
-                <Text style={[styles.categoryButtonText, selectedCategory === '' && styles.categoryButtonTextActive]}>
+                <Text style={[
+                  styles.categoryButtonText,
+                  { 
+                    color: selectedCategory === '' ? colors.white : colors.textSecondary
+                  }
+                ]}>
                   All Categories
                 </Text>
               </TouchableOpacity>
               {CATEGORIES.map(category => (
                 <TouchableOpacity
                   key={category}
-                  style={[styles.categoryButton, selectedCategory === category && styles.categoryButtonActive]}
-                  onPress={() => setSelectedCategory(category)}
+                  style={[
+                    styles.categoryButton,
+                    { 
+                      backgroundColor: selectedCategory === category ? colors.primary : colors.gray100
+                    }
+                  ]}
+                  onPress={() => selectCategory(category)}
                 >
-                  <Text style={[styles.categoryButtonText, selectedCategory === category && styles.categoryButtonTextActive]}>
+                  <Text style={[
+                    styles.categoryButtonText,
+                    { 
+                      color: selectedCategory === category ? colors.white : colors.textSecondary
+                    }
+                  ]}>
                     {category}
                   </Text>
                 </TouchableOpacity>
@@ -107,15 +201,20 @@ export default function HomeScreen() {
 
         {/* Results Info */}
         <View style={styles.resultsInfo}>
-          <Text style={styles.resultsText}>{filteredProducts.length} items found</Text>
-          {(searchQuery || selectedCategory) && (
-            <TouchableOpacity
-              onPress={() => {
-                setSearchQuery('');
-                setSelectedCategory('');
-              }}
-            >
-              <Text style={styles.clearFiltersText}>Clear filters</Text>
+          <Text style={[styles.resultsText, { color: colors.textSecondary }]}>
+            {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
+            {searchQuery.trim() && (
+              <Text style={{ fontWeight: '600' }}> for "{searchQuery.trim()}"</Text>
+            )}
+            {selectedCategory && (
+              <Text style={{ fontWeight: '600' }}> in {selectedCategory}</Text>
+            )}
+          </Text>
+          {(searchQuery.trim() || selectedCategory) && (
+            <TouchableOpacity onPress={clearFilters}>
+              <Text style={[styles.clearFiltersText, { color: colors.primary }]}>
+                Clear filters
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -132,27 +231,39 @@ export default function HomeScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="search" size={60} color={COLORS.gray400} />
-      <Text style={styles.emptyTitle}>
-        {searchQuery || selectedCategory ? 'No items found' : 'No items yet'}
+      <Ionicons name="search" size={60} color={colors.textTertiary} />
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        {searchQuery.trim() || selectedCategory ? 'No items found' : 'No items yet'}
       </Text>
-      <Text style={styles.emptySubtitle}>
-        {searchQuery || selectedCategory 
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+        {searchQuery.trim() || selectedCategory 
           ? 'Try adjusting your search terms or browse different categories' 
           : 'Be the first to list a sustainable item in our marketplace'
         }
       </Text>
+      {(searchQuery.trim() || selectedCategory) && (
+        <TouchableOpacity
+          style={[styles.clearFiltersButton, { borderColor: colors.primary }]}
+          onPress={clearFilters}
+        >
+          <Text style={[styles.clearFiltersButtonText, { color: colors.primary }]}>
+            Clear Search & Filters
+          </Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
-        style={styles.emptyButton}
+        style={[styles.emptyButton, { backgroundColor: colors.primary }]}
         onPress={() => navigation.navigate('AddProduct')}
       >
-        <Text style={styles.emptyButtonText}>List Your First Item</Text>
+        <Text style={[styles.emptyButtonText, { color: colors.white }]}>
+          List Your First Item
+        </Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={filteredProducts}
         renderItem={renderProduct}
@@ -163,8 +274,14 @@ export default function HomeScreen() {
         contentContainerStyle={styles.listContent}
         columnWrapperStyle={filteredProducts.length > 0 ? styles.row : null}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
         }
+        keyboardShouldPersistTaps="handled"
       />
     </SafeAreaView>
   );
@@ -173,7 +290,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   listContent: {
     flexGrow: 1,
@@ -183,7 +299,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   heroSection: {
-    backgroundColor: COLORS.primary,
     margin: 16,
     borderRadius: 16,
     padding: 24,
@@ -199,17 +314,15 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.white,
     marginLeft: 8,
   },
   heroSubtitle: {
     fontSize: 14,
-    color: COLORS.gray100,
     marginBottom: 20,
     lineHeight: 20,
+    opacity: 0.9,
   },
   heroButton: {
-    backgroundColor: COLORS.white,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -217,7 +330,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   heroButtonText: {
-    color: COLORS.primary,
     fontWeight: '600',
     marginLeft: 8,
   },
@@ -234,11 +346,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
     marginRight: 12,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
@@ -255,23 +365,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
   },
+  clearButton: {
+    padding: 4,
+  },
   filterButton: {
-    backgroundColor: COLORS.white,
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.gray300,
-  },
-  filterButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
   },
   filtersContainer: {
-    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
@@ -283,7 +388,6 @@ const styles = StyleSheet.create({
   filtersTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray700,
     marginBottom: 12,
   },
   categoriesContainer: {
@@ -292,38 +396,30 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryButton: {
-    backgroundColor: COLORS.gray100,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginBottom: 8,
   },
-  categoryButtonActive: {
-    backgroundColor: COLORS.primary,
-  },
   categoryButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.gray700,
-  },
-  categoryButtonTextActive: {
-    color: COLORS.white,
   },
   resultsInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   resultsText: {
     fontSize: 16,
     fontWeight: '500',
-    color: COLORS.gray600,
+    flex: 1,
   },
   clearFiltersText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.primary,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -333,25 +429,32 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginTop: 20,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: COLORS.gray600,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 30,
   },
+  clearFiltersButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  clearFiltersButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   emptyButton: {
-    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
   },
   emptyButtonText: {
-    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },

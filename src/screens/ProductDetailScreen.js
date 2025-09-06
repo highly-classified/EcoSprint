@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
-import { COLORS } from '../utils/constants';
+import { useTheme } from '../contexts/ThemeContext';
 import { formatDateTime } from '../utils/formatPrice';
 
 export default function ProductDetailScreen() {
@@ -20,19 +20,25 @@ export default function ProductDetailScreen() {
   const route = useRoute();
   const { productId } = route.params;
   const { products, addToCart, currentUser } = useApp();
+  const { colors } = useTheme(); // Added theme support
   
   const product = products.find(p => p.id === productId);
 
   if (!product) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { 
+          backgroundColor: colors.surface,
+          borderBottomColor: colors.border 
+        }]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={COLORS.gray900} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.notFoundContainer}>
-          <Text style={styles.notFoundText}>Product not found</Text>
+          <Text style={[styles.notFoundText, { color: colors.text }]}>
+            Product not found
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -48,52 +54,65 @@ export default function ProductDetailScreen() {
   const getConditionColor = (condition) => {
     switch (condition) {
       case 'Like New':
-        return { bg: '#dcfce7', text: '#166534' };
+        return { bg: colors.success + '20', text: colors.success };
       case 'Good':
-        return { bg: '#dbeafe', text: '#1d4ed8' };
+        return { bg: colors.info + '20', text: colors.info };
       case 'Fair':
-        return { bg: '#fef3c7', text: '#d97706' };
+        return { bg: colors.warning + '20', text: colors.warning };
       default:
-        return { bg: '#f3f4f6', text: '#374151' };
+        return { bg: colors.gray200, text: colors.textSecondary };
     }
   };
 
   const conditionColors = getConditionColor(product.condition);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { 
+        backgroundColor: colors.surface,
+        borderBottomColor: colors.border 
+      }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.gray900} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Product Details</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Product Details
+        </Text>
         <TouchableOpacity>
-          <Ionicons name="heart-outline" size={24} color={COLORS.gray900} />
+          <Ionicons name="heart-outline" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { backgroundColor: colors.gray100 }]}>
           <Image
             source={{ uri: product.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&h=600&fit=crop' }}
             style={styles.image}
           />
-          <View style={styles.ecoBadge}>
-            <Ionicons name="leaf" size={16} color={COLORS.success} />
-            <Text style={styles.ecoText}>Eco-Friendly</Text>
+          <View style={[styles.ecoBadge, { backgroundColor: colors.overlay }]}>
+            <Ionicons name="leaf" size={16} color={colors.success} />
+            <Text style={[styles.ecoText, { color: colors.success }]}>
+              Eco-Friendly
+            </Text>
           </View>
         </View>
 
-        <View style={styles.productInfo}>
+        <View style={[styles.productInfo, { backgroundColor: colors.surface }]}>
           <View style={styles.titleSection}>
-            <Text style={styles.title}>{product.title}</Text>
-            <Text style={styles.price}>${product.price}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {product.title}
+            </Text>
+            <Text style={[styles.price, { color: colors.primary }]}>
+              ${product.price}
+            </Text>
           </View>
 
           <View style={styles.metaSection}>
             <View style={styles.metaItem}>
-              <Ionicons name="pricetag-outline" size={16} color={COLORS.gray600} />
-              <Text style={styles.metaText}>{product.category}</Text>
+              <Ionicons name="pricetag-outline" size={16} color={colors.textSecondary} />
+              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                {product.category}
+              </Text>
             </View>
             <View style={[styles.conditionBadge, { backgroundColor: conditionColors.bg }]}>
               <Text style={[styles.conditionText, { color: conditionColors.text }]}>
@@ -102,40 +121,64 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          <View style={styles.impactSection}>
-            <Text style={styles.impactTitle}>Environmental Impact</Text>
+          <View style={[styles.impactSection, { backgroundColor: colors.success + '10' }]}>
+            <Text style={[styles.impactTitle, { color: colors.text }]}>
+              Environmental Impact
+            </Text>
             <View style={styles.impactList}>
-              <Text style={styles.impactItem}>✅ Extends product lifecycle</Text>
-              <Text style={styles.impactItem}>✅ Reduces manufacturing demand</Text>
-              <Text style={styles.impactItem}>✅ Prevents landfill waste</Text>
-              <Text style={styles.impactItem}>✅ Lower carbon footprint</Text>
+              <Text style={[styles.impactItem, { color: colors.textSecondary }]}>
+                ✅ Extends product lifecycle
+              </Text>
+              <Text style={[styles.impactItem, { color: colors.textSecondary }]}>
+                ✅ Reduces manufacturing demand
+              </Text>
+              <Text style={[styles.impactItem, { color: colors.textSecondary }]}>
+                ✅ Prevents landfill waste
+              </Text>
+              <Text style={[styles.impactItem, { color: colors.textSecondary }]}>
+                ✅ Lower carbon footprint
+              </Text>
             </View>
           </View>
 
           <View style={styles.descriptionSection}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>{product.description}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Description
+            </Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>
+              {product.description}
+            </Text>
           </View>
 
-          <View style={styles.sellerSection}>
-            <Text style={styles.sectionTitle}>Seller Information</Text>
+          <View style={[styles.sellerSection, { backgroundColor: colors.gray100 }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Seller Information
+            </Text>
             <View style={styles.sellerInfo}>
-              <View style={styles.sellerAvatar}>
-                <Ionicons name="person" size={20} color={COLORS.primary} />
+              <View style={[styles.sellerAvatar, { backgroundColor: colors.primary + '20' }]}>
+                <Ionicons name="person" size={20} color={colors.primary} />
               </View>
               <View style={styles.sellerDetails}>
-                <Text style={styles.sellerName}>{product.sellerName}</Text>
-                <Text style={styles.sellerBadge}>Verified Seller</Text>
+                <Text style={[styles.sellerName, { color: colors.text }]}>
+                  {product.sellerName}
+                </Text>
+                <Text style={[styles.sellerBadge, { color: colors.textSecondary }]}>
+                  Verified Seller
+                </Text>
               </View>
             </View>
             <View style={styles.sellerMeta}>
               <View style={styles.sellerMetaItem}>
-                <Ionicons name="location-outline" size={16} color={COLORS.gray500} />
-                <Text style={styles.sellerMetaText}>{product.location || 'Location not specified'}</Text>
+                <Ionicons name="location-outline" size={16} color={colors.textTertiary} />
+                <Text style={[styles.sellerMetaText, { color: colors.textSecondary }]}>
+                  {product.location || 'Location not specified'}
+                </Text>
               </View>
               <View style={styles.sellerMetaItem}>
-                <Ionicons name="calendar-outline" size={16} color={COLORS.gray500} />
-                <Text style={styles.sellerMetaText}>Listed on {formatDateTime(product.datePosted)}</Text>
+                <Ionicons name="calendar-outline" size={16} color={colors.textTertiary} />
+                <Text style={[styles.sellerMetaText, { color: colors.textSecondary }]}>
+                  Listed on {formatDateTime(product.datePosted)}
+                </Text>
               </View>
             </View>
           </View>
@@ -143,22 +186,39 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       {!isOwnProduct && (
-        <View style={styles.actionSection}>
-          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-            <Ionicons name="cart-outline" size={20} color={COLORS.white} />
-            <Text style={styles.addToCartText}>Add to Cart</Text>
+        <View style={[styles.actionSection, { 
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border 
+        }]}>
+          <TouchableOpacity 
+            style={[styles.addToCartButton, { backgroundColor: colors.primary }]} 
+            onPress={handleAddToCart}
+          >
+            <Ionicons name="cart-outline" size={20} color={colors.white} />
+            <Text style={[styles.addToCartText, { color: colors.white }]}>
+              Add to Cart
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.actionNote}>Secure checkout • Support sustainable commerce</Text>
+          <Text style={[styles.actionNote, { color: colors.textTertiary }]}>
+            Secure checkout • Support sustainable commerce
+          </Text>
         </View>
       )}
 
       {isOwnProduct && (
-        <View style={styles.ownProductSection}>
+        <View style={[styles.ownProductSection, { 
+          backgroundColor: colors.info + '10',
+          borderTopColor: colors.border 
+        }]}>
           <View style={styles.ownProductInfo}>
-            <Ionicons name="person-outline" size={20} color={COLORS.info} />
+            <Ionicons name="person-outline" size={20} color={colors.info} />
             <View style={styles.ownProductText}>
-              <Text style={styles.ownProductTitle}>This is your listing</Text>
-              <Text style={styles.ownProductSubtitle}>Manage your listing from the "My Items" section</Text>
+              <Text style={[styles.ownProductTitle, { color: colors.info }]}>
+                This is your listing
+              </Text>
+              <Text style={[styles.ownProductSubtitle, { color: colors.info }]}>
+                Manage your listing from the "My Items" section
+              </Text>
             </View>
           </View>
         </View>
@@ -170,7 +230,6 @@ export default function ProductDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: 'row',
@@ -178,14 +237,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray200,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.gray900,
   },
   content: {
     flex: 1,
@@ -193,7 +249,6 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     height: 300,
-    backgroundColor: COLORS.gray100,
   },
   image: {
     width: '100%',
@@ -203,7 +258,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     left: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -213,11 +267,9 @@ const styles = StyleSheet.create({
   ecoText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.success,
     marginLeft: 6,
   },
   productInfo: {
-    backgroundColor: COLORS.white,
     padding: 20,
   },
   titleSection: {
@@ -230,13 +282,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.gray900,
     marginRight: 16,
   },
   price: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.primary,
   },
   metaSection: {
     flexDirection: 'row',
@@ -250,7 +300,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 14,
-    color: COLORS.gray600,
     marginLeft: 6,
   },
   conditionBadge: {
@@ -263,7 +312,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   impactSection: {
-    backgroundColor: COLORS.success + '10',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -271,7 +319,6 @@ const styles = StyleSheet.create({
   impactTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginBottom: 12,
   },
   impactList: {
@@ -279,7 +326,6 @@ const styles = StyleSheet.create({
   },
   impactItem: {
     fontSize: 14,
-    color: COLORS.gray700,
   },
   descriptionSection: {
     marginBottom: 24,
@@ -287,16 +333,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray900,
     marginBottom: 12,
   },
   description: {
     fontSize: 14,
-    color: COLORS.gray700,
     lineHeight: 20,
   },
   sellerSection: {
-    backgroundColor: COLORS.gray50,
     borderRadius: 12,
     padding: 16,
   },
@@ -308,7 +351,6 @@ const styles = StyleSheet.create({
   sellerAvatar: {
     width: 40,
     height: 40,
-    backgroundColor: COLORS.primary + '20',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -320,11 +362,9 @@ const styles = StyleSheet.create({
   sellerName: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.gray900,
   },
   sellerBadge: {
     fontSize: 12,
-    color: COLORS.gray600,
   },
   sellerMeta: {
     gap: 8,
@@ -335,17 +375,13 @@ const styles = StyleSheet.create({
   },
   sellerMetaText: {
     fontSize: 12,
-    color: COLORS.gray600,
     marginLeft: 8,
   },
   actionSection: {
-    backgroundColor: COLORS.white,
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray200,
   },
   addToCartButton: {
-    backgroundColor: COLORS.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -354,21 +390,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   addToCartText: {
-    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
   },
   actionNote: {
     fontSize: 12,
-    color: COLORS.gray500,
     textAlign: 'center',
   },
   ownProductSection: {
-    backgroundColor: COLORS.info + '10',
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray200,
   },
   ownProductInfo: {
     flexDirection: 'row',
@@ -380,11 +412,9 @@ const styles = StyleSheet.create({
   ownProductTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.info,
   },
   ownProductSubtitle: {
     fontSize: 12,
-    color: COLORS.info,
     opacity: 0.8,
   },
   notFoundContainer: {
@@ -395,6 +425,5 @@ const styles = StyleSheet.create({
   notFoundText: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.gray900,
   },
 });
