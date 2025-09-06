@@ -1,39 +1,10 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { User, Product, CartItem, Purchase } from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { storeData, getData } from '../services/storage';
 
-interface AppContextType {
-  // Auth
-  currentUser: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: Omit<User, 'id' | 'joinDate'>) => Promise<boolean>;
-  logout: () => void;
-  updateProfile: (updates: Partial<User>) => void;
-  
-  // Products
-  products: Product[];
-  addProduct: (product: Omit<Product, 'id' | 'datePosted'>) => void;
-  updateProduct: (id: string, updates: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  
-  // Cart
-  cartItems: CartItem[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void;
-  clearCart: () => void;
-  
-  // Purchases
-  purchases: Purchase[];
-  completePurchase: () => void;
-  
-  // Users (for demo purposes)
-  users: User[];
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext();
 
 // Sample data for demo
-const sampleProducts: Product[] = [
+const sampleProducts = [
   {
     id: '1',
     title: 'Vintage Leather Jacket',
@@ -88,95 +59,136 @@ const sampleProducts: Product[] = [
   }
 ];
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useLocalStorage<User | null>('currentUser', null);
-  const [users, setUsers] = useLocalStorage<User[]>('users', []);
-  const [products, setProducts] = useLocalStorage<Product[]>('products', sampleProducts);
-  const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('cartItems', []);
-  const [purchases, setPurchases] = useLocalStorage<Purchase[]>('purchases', []);
+export function AppProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState(sampleProducts);
+  const [cartItems, setCartItems] = useState([]);
+  const [purchases, setPurchases] = useState([]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    const userData = await getData('currentUser');
+    const usersData = await getData('users');
+    const productsData = await getData('products');
+    const cartData = await getData('cartItems');
+    const purchasesData = await getData('purchases');
+
+    if (userData) setCurrentUser(userData);
+    if (usersData) setUsers(usersData);
+    if (productsData) setProducts(productsData);
+    if (cartData) setCartItems(cartData);
+    if (purchasesData) setPurchases(purchasesData);
+  };
+
+  const login = async (email, password) => {
     const user = users.find(u => u.email === email);
     if (user) {
       setCurrentUser(user);
+      await storeData('currentUser', user);
       return true;
     }
     return false;
   };
 
-  const register = async (userData: Omit<User, 'id' | 'joinDate'>): Promise<boolean> => {
+  const register = async (userData) => {
     const existingUser = users.find(u => u.email === userData.email);
     if (existingUser) {
       return false;
     }
     
-    const newUser: User = {
+    const newUser = {
       ...userData,
       id: Date.now().toString(),
       joinDate: new Date().toISOString(),
     };
     
-    setUsers([...users, newUser]);
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
     setCurrentUser(newUser);
+    await storeData('users', updatedUsers);
+    await storeData('currentUser', newUser);
     return true;
   };
 
-  const logout = () => {
+  const logout = async () => {
     setCurrentUser(null);
     setCartItems([]);
+    await storeData('currentUser', null);
+    await storeData('cartItems', []);
   };
 
-  const updateProfile = (updates: Partial<User>) => {
+  const updateProfile = async (updates) => {
     if (currentUser) {
       const updatedUser = { ...currentUser, ...updates };
       setCurrentUser(updatedUser);
-      setUsers(users.map(u => u.id === currentUser.id ? updatedUser : u));
+      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
+      setUsers(updatedUsers);
+      await storeData('currentUser', updatedUser);
+      await storeData('users', updatedUsers);
     }
   };
 
-  const addProduct = (productData: Omit<Product, 'id' | 'datePosted'>) => {
-    const newProduct: Product = {
+  const addProduct = async (productData) => {
+    const newProduct = {
       ...productData,
       id: Date.now().toString(),
       datePosted: new Date().toISOString(),
     };
-    setProducts([newProduct, ...products]);
+    const updatedProducts = [newProduct, ...products];
+    setProducts(updatedProducts);
+    await storeData('products', updatedProducts);
   };
 
-  const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts(products.map(p => p.id === id ? { ...p, ...updates } : p));
+  const updateProduct = async (id, updates) => {
+    const updatedProducts = products.map(p => p.id === id ? { ...p, ...updates } : p);
+    setProducts(updatedProducts);
+    await storeData('products', updatedProducts);
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
+  const deleteProduct = async (id) => {
+    const updatedProducts = products.filter(p => p.id !== id);
+    setProducts(updatedProducts);
+    await storeData('products', updatedProducts);
   };
 
-  const addToCart = (product: Product) => {
+  const addToCart = async (product) => {
     const existingItem = cartItems.find(item => item.product.id === product.id);
+    let updatedCart;
+    
     if (existingItem) {
-      setCartItems(cartItems.map(item => 
+      updatedCart = cartItems.map(item => 
         item.product.id === product.id 
           ? { ...item, quantity: item.quantity + 1 }
           : item
-      ));
+      );
     } else {
-      setCartItems([...cartItems, { 
+      updatedCart = [...cartItems, { 
         product, 
         quantity: 1, 
         addedAt: new Date().toISOString() 
-      }]);
+      }];
     }
+    
+    setCartItems(updatedCart);
+    await storeData('cartItems', updatedCart);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCartItems(cartItems.filter(item => item.product.id !== productId));
+  const removeFromCart = async (productId) => {
+    const updatedCart = cartItems.filter(item => item.product.id !== productId);
+    setCartItems(updatedCart);
+    await storeData('cartItems', updatedCart);
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCartItems([]);
+    await storeData('cartItems', []);
   };
 
-  const completePurchase = () => {
+  const completePurchase = async () => {
     if (!currentUser || cartItems.length === 0) return;
     
     const newPurchases = cartItems.map(item => ({
@@ -188,8 +200,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       buyerId: currentUser.id,
     }));
     
-    setPurchases([...newPurchases, ...purchases]);
-    clearCart();
+    const updatedPurchases = [...newPurchases, ...purchases];
+    setPurchases(updatedPurchases);
+    await storeData('purchases', updatedPurchases);
+    await clearCart();
   };
 
   return (
