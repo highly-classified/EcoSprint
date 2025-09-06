@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,20 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Custom Header Title Component with Logo
+const CustomHeaderTitle = ({ title = 'EcoSprint' }) => {
+  const { colors } = useTheme();
+  
+  return (
+    <View style={styles.headerContainer}>
+      <Ionicons name="leaf" size={22} color={colors.primary} />
+      <Text style={[styles.headerText, { color: colors.text }]}>
+        {title}
+      </Text>
+    </View>
+  );
+};
 
 function MainTabs() {
   const { colors } = useTheme();
@@ -66,7 +81,9 @@ function MainTabs() {
       <Tab.Screen 
         name="Home" 
         component={HomeScreen}
-        options={{ title: 'EcoSprint' }}
+        options={{ 
+          headerTitle: () => <CustomHeaderTitle title="EcoSprint" />
+        }}
       />
       <Tab.Screen 
         name="MyListings" 
@@ -144,3 +161,20 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  headerText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+});
