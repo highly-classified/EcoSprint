@@ -82,7 +82,7 @@ function MainTabs() {
         name="Home" 
         component={HomeScreen}
         options={{ 
-          headerTitle: () => <CustomHeaderTitle title="EcoSprint" />
+          headerTitle: () => <CustomHeaderTitle title=" EcoSprint" />
         }}
       />
       <Tab.Screen 
